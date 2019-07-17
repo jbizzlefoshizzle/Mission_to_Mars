@@ -3,6 +3,8 @@
 from splinter import Browser
 from bs4 import BeautifulSoup
 from selenium import webdriver
+import time
+import pandas as pd
 
 def scrape_all():
     executable_path = {'executable_path': 'C:\\Users\\jbpar\\Desktop\\git\\Mission_to_Mars\\chromedriver.exe'}
@@ -84,8 +86,9 @@ def mars_facts(browser):
     facts_soup = BeautifulSoup(html, 'html.parser')
     temp = pd.read_html('https://space-facts.com/mars/')[1]
     temp.rename(columns={0: 'Description', 1: 'Value'}, inplace=True)
-    mars_facts = temp.set_index('Description')
+    temp_two_electric_boogaloo = temp.set_index('Description')
+    mars_facts = temp_two_electric_boogaloo.to_html(header=True, index=True)
     
     return mars_facts
 
-    # return thingie
+def mars_hemispheres(browser):
