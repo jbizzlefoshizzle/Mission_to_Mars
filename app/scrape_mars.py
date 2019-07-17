@@ -14,7 +14,9 @@ def scrape_all():
     data = {
         "news_title": news_title,
         "news_paragaph": news_p,
-        "featured_image": featured_image(browser)
+        "featured_image": featured_image(browser),
+        "current_weather_on_mars": mars_weather(browser),
+        "mars_facts": mars_facts(browser)
     }
 
     return data
@@ -24,8 +26,6 @@ def mars_news(browser): # Time to copy stuff over from the Pandas file!
     url = 'https://mars.nasa.gov/news/'
     # Hey, driver! Go get it.
     browser.visit(url)
-    # driver.get(url)
-
     # If we have our elements
     # Now we can make our Soup
     html = browser.html
@@ -40,4 +40,52 @@ def mars_news(browser): # Time to copy stuff over from the Pandas file!
     return news_title, news_p
 
 def featured_image(browser):
+    # Open, visit, and scrape the proper site
+    url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
+    browser.visit(url)
+    # Need to see what's up with the "Full Image" button
+    full_image_elem = browser.find_by_id('full_image')
+    # CLICK the "Full Image" button
+    full_image_elem.click()
+    # Need to see what's up with the "More Info" button
+    more_info = browser.find_link_by_partial_text('more info')
+    # CLICK the "More Info" button
+    more_info.click()
+    # Make some Soup!
+    html = browser.html
+    img_soup = BeautifulSoup(html, 'html.parser')  
+    # Traverse the CSS
+    # <figure class="lede"> --> <a href = "blahblah"> --> <img alt/title/class="blah" src="WHAT WE WANT">
+    img_url_rel = img_soup.select_one('figure.lede a img').get("src")
+    #Create url by appending things to other things
+    url_base = 'https://www.jpl.nasa.gov'
+    img_url = f'{url_base}{img_url_rel}'
+
     return img_url
+
+def mars_weather(browser):
+    # Open, visit, and scrape the proper site
+    url = 'https://twitter.com/marswxreport?lang=en'
+    browser.visit(url)
+    # Make some Soup!
+    html = browser.html
+    weather_soup = BeautifulSoup(html, 'html.parser')
+    # With multiple instances of the same text, pull out the one easiest to edit
+    temp_text = weather_soup.find_all('p', class_="TweetTextSize TweetTextSize--normal js-tweet-text tweet-text")[1].text
+    mars_weather = temp_text.replace("\n", ", ")
+    
+    return mars_weather
+
+def mars_facts(browser):
+    # Open, visit, and scrape the proper site
+    url = 'https://space-facts.com/mars/'
+    browser.visit(url)
+    html = browser.html
+    facts_soup = BeautifulSoup(html, 'html.parser')
+    temp = pd.read_html('https://space-facts.com/mars/')[1]
+    temp.rename(columns={0: 'Description', 1: 'Value'}, inplace=True)
+    mars_facts = temp.set_index('Description')
+    
+    return mars_facts
+
+    # return thingie
